@@ -10,9 +10,31 @@ export default function UploadPage() {
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
 
-    if (file) {
-      setSelectedFile(file);
+    if (!file) {
+      return;
     }
+
+    if (file.type !== "application/pdf") {
+      alert("Please select a PDF file.");
+      event.target.value = "";
+      setSelectedFile(null);
+      return;
+    }
+
+    setSelectedFile(file);
+  }
+
+  function handleStartReading() {
+    if (!selectedFile) {
+      return;
+    }
+
+    const pdfUrl = URL.createObjectURL(selectedFile);
+
+    sessionStorage.setItem("bookrootPdfUrl", pdfUrl);
+    sessionStorage.setItem("bookrootPdfName", selectedFile.name);
+
+    router.push("/reader");
   }
 
   return (
@@ -25,7 +47,7 @@ export default function UploadPage() {
         <label className="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-gray-400 p-10 transition hover:border-black hover:bg-gray-50">
           <input
             type="file"
-            accept=".pdf"
+            accept="application/pdf,.pdf"
             className="hidden"
             onChange={handleFileChange}
           />
@@ -40,13 +62,15 @@ export default function UploadPage() {
                 Selected File
               </p>
 
-              <p>{selectedFile.name}</p>
+              <p className="mt-1 break-words">
+                {selectedFile.name}
+              </p>
             </div>
 
             <button
               type="button"
-              onClick={() => router.push("/reader")}
-              className="mt-4 w-full rounded-lg bg-black py-3 text-white hover:bg-gray-800"
+              onClick={handleStartReading}
+              className="mt-4 w-full rounded-lg bg-black py-3 text-white transition hover:bg-gray-800"
             >
               Start Reading
             </button>
