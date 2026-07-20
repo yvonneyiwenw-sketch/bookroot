@@ -1,50 +1,129 @@
-import type { DictionaryEntry, DictionaryFile } from "@/types/dictionary";
+import type { DictionaryEntry, DictionaryPart } from "@/types/dictionary";
 import sampleDictionary from "@/data/dictionary/building-construction.sample.json";
 
-const dictionaryFile = sampleDictionary as DictionaryFile;
+type RawDictionaryEntry = {
+  word: string;
+  slug?: string;
+  partOfSpeech?: string | string[];
+  domains?: string[];
 
-export const dictionaryEntries: DictionaryEntry[] = dictionaryFile.entries;
+  meaningZh?: string;
+  definitionEn?: string;
 
-const bySlug = new Map(dictionaryEntries.map((entry) => [entry.slug, entry]));
-const byTerm = new Map<string, DictionaryEntry>();
+  professionalMeaningEn?: string;
+  professionalMeaningZh?: string;
 
-for (const entry of dictionaryEntries) {
-  const terms = [entry.word, entry.slug, ...entry.aliases, ...(entry.searchTerms ?? [])];
-  for (const term of terms) {
-    const key = normalizeDictionaryTerm(term);
-    if (key && !byTerm.has(key)) byTerm.set(key, entry);
+  whyThisWordEn?: string;
+  whyThisWordZh?: string;
+
+  originEn?: string;
+  originZh?: string;
+
+  memoryTrickEn?: string;
+  memoryTrickZh?: string;
+
+  exampleEn?: string;
+  exampleZh?: string;
+
+  australianUsageEn?: string;
+  australianUsageZh?: string;
+
+  wordParts?: DictionaryPart[];
+  relatedWords?: string[];
+
+  isTechnicalTerm?: boolean;
+};
+
+type RawDictionaryFile = {
+  category?: string;
+  entries: RawDictionaryEntry[];
+};
+
+const rawDictionary = sampleDictionary as unknown as RawDictionaryFile;
+
+export const dictionaryEntries: DictionaryEntry[] =
+  rawDictionary.entries.map((entry) => {
+    const partOfSpeech = Array.isArray(entry.partOfSpeech)
+      ? entry.partOfSpeech.join(", ")
+      : entry.partOfSpeech || "";
+
+    return {
+      term: entry.word,
+      slug: entry.slug || entry.word.toLowerCase().replace(/\s+/g, "-"),
+
+      category:
+        entry.domains?.[0] ||
+        rawDictionary.category ||
+        "General",
+
+      partOfSpeech,
+
+      meaningZh: entry.meaningZh,
+      definitionEn: entry.definitionEn,
+
+      professionalExplanationEn:
+        entry.professionalMeaningEn || entry.definitionEn || "",
+
+      professionalExplanationZh:
+        entry.professionalMeaningZh || entry.meaningZh || "",
+
+      whyThisWordEn: entry.whyThisWordEn,
+      whyThisWordZh: entry.whyThisWordZh,
+
+      originEn: entry.originEn,
+      originZh: entry.originZh,
+
+      memoryTrickEn: entry.memoryTrickEn,
+      memoryTrickZh: entry.memoryTrickZh,
+
+      exampleEn: entry.exampleEn,
+      exampleZh: entry.exampleZh,
+
+      australianUsageEn: entry.australianUsageEn,
+      australianUsageZh: entry.australianUsageZh,
+
+      isTechnicalTerm: entry.isTechnicalTerm ?? true,
+
+      wordParts: entry.wordParts || [],
+      relatedWords: entry.relatedWords || [],
+    };
+  });
+
+const bySlug = new Map(
+  dictionaryEntries.map((entry) => [entry.slug, entry])
+);
+
+export function getDictionaryEntry(
+  termOrSlug: string
+): DictionaryEntry | undefined {
+  const normalized = termOrSlug.trim().toLowerCase();
+
+  return (
+    bySlug.get(normalized) ||
+    dictionaryEntries.find(
+      (entry) => entry.term.toLowerCase() === normalized
+    )
+  );
+}
+
+export function searchDictionary(
+  query: string
+): DictionaryEntry[] {
+  const normalized = query.trim().toLowerCase();
+
+  if (!normalized) {
+    return dictionaryEntries;
   }
-}
-
-export function normalizeDictionaryTerm(value: string): string {
-  return value.trim().toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, " ");
-}
-
-export function getDictionaryEntryBySlug(slug: string): DictionaryEntry | undefined {
-  return bySlug.get(slug);
-}
-
-export function findDictionaryEntry(term: string): DictionaryEntry | undefined {
-  return byTerm.get(normalizeDictionaryTerm(term));
-}
-
-export function searchDictionary(query: string): DictionaryEntry[] {
-  const normalized = normalizeDictionaryTerm(query);
-  if (!normalized) return dictionaryEntries;
 
   return dictionaryEntries.filter((entry) => {
-    const haystack = [
-      entry.word,
-      entry.meaningZh,
-      entry.definitionEn,
-      entry.professionalMeaningZh ?? "",
-      ...entry.aliases,
-      ...entry.tags,
-      ...(entry.searchTerms ?? []),
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(normalized);
+    return (
+      entry.term.toLowerCase().includes(normalized) ||
+      entry.slug.toLowerCase().includes(normalized) ||
+      entry.meaningZh?.includes(query) ||
+      entry.definitionEn?.toLowerCase().includes(normalized) ||
+      entry.relatedWords.some((word) =>
+        word.toLowerCase().includes(normalized)
+      )
+    );
   });
 }

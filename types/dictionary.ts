@@ -56,6 +56,10 @@ export type DictionaryEntry = {
   australianUsage?: string;
 };
 
+export type DictionaryFile = {
+  entries: DictionaryEntry[];
+};
+
 export function dictionaryText(entry: DictionaryEntry) {
   return {
     meaningZh: entry.meaningZh || entry.chinese || "暂无中文释义",
