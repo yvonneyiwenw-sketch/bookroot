@@ -298,16 +298,36 @@ for (
   }
 
   const page = await pdf.getPage(pageNumber);
-  const content = await page.getTextContent();
 
-  const text = content.items
-    .map((item) => {
-      if ("str" in item) {
-        return item.str;
+  const textStream = page.streamTextContent();
+  const reader = textStream.getReader();
+  const textParts: string[] = [];
+
+  try {
+    while (true) {
+      const result = await reader.read();
+
+      if (result.done) {
+        break;
       }
 
-      return "";
-    })
+      const chunk = result.value;
+
+      if (!chunk) {
+        continue;
+      }
+
+      for (const item of chunk.items) {
+        if ("str" in item && item.str) {
+          textParts.push(item.str);
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const text = textParts
     .join(" ")
     .replace(/\s+/g, " ")
     .trim();
