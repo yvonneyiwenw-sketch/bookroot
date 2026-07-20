@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import PageShell from "@/components/PageShell";
 
 export default function UploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -9,74 +10,37 @@ export default function UploadPage() {
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
+    if (!file) return;
     if (file.type !== "application/pdf") {
-      alert("Please select a PDF file.");
+      window.alert("Please select a PDF file.");
       event.target.value = "";
       setSelectedFile(null);
       return;
     }
-
     setSelectedFile(file);
   }
 
   function handleStartReading() {
-    if (!selectedFile) {
-      return;
-    }
-
+    if (!selectedFile) return;
+    const oldUrl = sessionStorage.getItem("bookrootPdfUrl");
+    if (oldUrl?.startsWith("blob:")) URL.revokeObjectURL(oldUrl);
     const pdfUrl = URL.createObjectURL(selectedFile);
-
     sessionStorage.setItem("bookrootPdfUrl", pdfUrl);
     sessionStorage.setItem("bookrootPdfName", selectedFile.name);
-
     router.push("/reader");
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="w-full max-w-lg rounded-2xl bg-white p-10 shadow-lg">
-        <h1 className="mb-8 text-3xl font-bold">
-          Upload Your Book
-        </h1>
-
-        <label className="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-gray-400 p-10 transition hover:border-black hover:bg-gray-50">
-          <input
-            type="file"
-            accept="application/pdf,.pdf"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-
-          📄 Click to Select PDF
+    <PageShell title="Upload a PDF" subtitle="Text-based PDFs work best. Scanned drawings need OCR, which is not included yet.">
+      <div className="mx-auto max-w-2xl rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
+        <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-stone-300 p-12 text-center transition hover:border-green-600 hover:bg-green-50">
+          <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={handleFileChange} />
+          <span className="text-4xl">PDF</span>
+          <span className="mt-4 text-lg font-bold">Click to select a PDF</span>
+          <span className="mt-2 text-sm text-gray-500">The file stays in your current browser session.</span>
         </label>
-
-        {selectedFile && (
-          <div className="mt-8">
-            <div className="rounded-lg bg-green-100 p-4">
-              <p className="font-semibold">
-                Selected File
-              </p>
-
-              <p className="mt-1 break-words">
-                {selectedFile.name}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleStartReading}
-              className="mt-4 w-full rounded-lg bg-black py-3 text-white transition hover:bg-gray-800"
-            >
-              Start Reading
-            </button>
-          </div>
-        )}
+        {selectedFile && <div className="mt-6 rounded-2xl bg-stone-50 p-5"><p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Selected file</p><p className="mt-2 break-words font-semibold">{selectedFile.name}</p><button type="button" onClick={handleStartReading} className="mt-5 w-full rounded-xl bg-green-700 py-3 font-semibold text-white hover:bg-green-800">Start Reading and Extract Words</button></div>}
       </div>
-    </main>
+    </PageShell>
   );
 }

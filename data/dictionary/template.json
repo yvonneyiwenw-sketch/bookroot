@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "1.0",
+  "category": "building-construction",
+  "description": "BookRoot Building and Construction Dictionary",
+  "entries": [
+    {
+      "id": "bc-footing",
+      "word": "footing",
+      "slug": "footing",
+      "aliases": ["footings"],
+      "partOfSpeech": ["noun"],
+      "domains": ["building-construction", "structures", "concrete"],
+      "tags": ["foundation", "load transfer", "site inspection"],
+      "level": "foundation",
+      "meaningZh": "基础底座；承台式基础",
+      "definitionEn": "The lowest widened part of a foundation that spreads structural loads into the supporting soil.",
+      "professionalMeaningZh": "建筑物基础系统中位于最下方并扩大受力面积的构件，用来把墙、柱等产生的荷载安全传递到地基土。",
+      "whyThisWord": "A person stands on their feet. A building also needs a stable 'foot' at the bottom, so this supporting base is called a footing.",
+      "origin": "Formed from foot plus the noun-forming suffix -ing. The structural sense developed from the idea of a base on which something stands.",
+      "wordParts": [
+        {
+          "part": "foot",
+          "meaningZh": "脚；底部支撑",
+          "meaningEn": "the lowest supporting part",
+          "type": "base"
+        },
+        {
+          "part": "-ing",
+          "meaningZh": "形成名词，表示事物或结构",
+          "type": "suffix"
+        }
+      ],
+      "memoryTrick": "A building's footing is its foot: the part that stands on the ground.",
+      "wordFamily": ["foot", "footpath", "footbridge", "footprint"],
+      "relatedWords": ["foundation", "slab", "pier", "pile", "reinforcement"],
+      "collocations": [
+        {
+          "phrase": "strip footing",
+          "translationZh": "条形基础",
+          "example": "The external masonry walls are supported on strip footings."
+        },
+        {
+          "phrase": "pad footing",
+          "translationZh": "独立基础"
+        },
+        {
+          "phrase": "pour the footing",
+          "translationZh": "浇筑基础"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "The footing must be inspected before the concrete is poured.",
+          "translationZh": "浇筑混凝土之前必须检查基础。",
+          "context": "pre-pour inspection",
+          "register": "site"
+        },
+        {
+          "sentence": "Refer to the structural drawings for footing sizes and reinforcement.",
+          "translationZh": "基础尺寸和配筋请参阅结构图纸。",
+          "context": "drawing coordination",
+          "register": "drawing"
+        }
+      ],
+      "comparisons": [
+        {
+          "word": "foundation",
+          "explanationZh": "foundation 是整个基础系统的统称；footing 通常指最下方、扩大受力面积并把荷载传入土体的部分。",
+          "explanationEn": "Foundation is the broader support system, while a footing is usually the widened load-spreading base."
+        }
+      ],
+      "australianUsage": {
+        "noteZh": "在澳洲住宅施工、结构图、building permit 文件和现场验收中非常常见。常见类型包括 strip footing、pad footing 和 bored pier footing。",
+        "noteEn": "Common in Australian residential construction, structural documentation and inspection language.",
+        "level": "common"
+      },
+      "pronunciation": {
+        "ipa": "/ˈfʊtɪŋ/",
+        "syllables": "foot-ing",
+        "stress": "FOOT-ing"
+      },
+      "searchTerms": ["foundation base", "concrete footing", "基础", "地基"],
+      "sources": [],
+      "status": "reviewed",
+      "version": 1,
+      "createdAt": "2026-07-20T00:00:00.000Z",
+      "updatedAt": "2026-07-20T00:00:00.000Z"
+    }
+  ]
+}
