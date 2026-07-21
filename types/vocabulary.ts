@@ -1,3 +1,11 @@
+export type CefrLevel =
+  | "A1"
+  | "A2"
+  | "B1"
+  | "B2"
+  | "C1"
+  | "C2";
+  
 export type VocabularyStatus = "new" | "learning" | "mastered";
 
 export type VocabularySource = {
@@ -14,6 +22,7 @@ export type VocabularyItem = {
   status: VocabularyStatus;
   meaning: string;
   notes: string;
+  level?: CefrLevel;
   sources: VocabularySource[];
   createdAt: string;
   updatedAt: string;

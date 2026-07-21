@@ -1,4 +1,4 @@
-import type { AnalysisSettings, ReviewHistoryEntry, VocabularyItem, VocabularyStatus, WordCandidate } from "@/types/vocabulary";
+import type { AnalysisSettings, ReviewHistoryEntry, CefrLevel, VocabularyItem, VocabularyStatus, WordCandidate } from "@/types/vocabulary";
 
 export const STORAGE_KEYS = {
   vocabulary: "bookroot-vocabulary-v1",
@@ -28,35 +28,95 @@ export function saveVocabulary(items: VocabularyItem[]): void {
   if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEYS.vocabulary, JSON.stringify(items));
 }
 
-export function addVocabularyItems(candidates: WordCandidate[], documentName: string): VocabularyItem[] {
+type WordCandidateWithLevel = WordCandidate & {
+  level?: CefrLevel;
+};
+
+export function addVocabularyItems(
+  candidates: WordCandidateWithLevel[],
+  documentName: string,
+): VocabularyItem[] {
   const current = getVocabulary();
   const now = new Date().toISOString();
-  const byWord = new Map(current.map((item) => [item.normalizedWord, item]));
+
+  const byWord = new Map(
+    current.map((item) => [
+      item.normalizedWord,
+      item,
+    ]),
+  );
 
   for (const candidate of candidates) {
-    const normalizedWord = candidate.word.toLowerCase();
+    const normalizedWord = candidate.word
+      .trim()
+      .toLowerCase();
+
     const existing = byWord.get(normalizedWord);
+
     if (existing) {
-      const sourceIndex = existing.sources.findIndex((source) => source.documentName === documentName);
+      const sourceIndex = existing.sources.findIndex(
+        (source) =>
+          source.documentName === documentName,
+      );
+
       const sources = [...existing.sources];
+
       if (sourceIndex >= 0) {
-        sources[sourceIndex] = { ...sources[sourceIndex], frequency: candidate.count, firstPage: candidate.firstPage };
+        sources[sourceIndex] = {
+          ...sources[sourceIndex],
+          frequency: candidate.count,
+          firstPage: candidate.firstPage,
+        };
       } else {
-        sources.push({ documentName, frequency: candidate.count, firstPage: candidate.firstPage, addedAt: now });
+        sources.push({
+          documentName,
+          frequency: candidate.count,
+          firstPage: candidate.firstPage,
+          addedAt: now,
+        });
       }
-      byWord.set(normalizedWord, { ...existing, sources, updatedAt: now });
+
+      byWord.set(normalizedWord, {
+        ...existing,
+
+        // 如果词库中已经有等级，就保留原等级。
+        // 如果旧词没有等级，就补上 Candidate 已经计算好的等级。
+        level: existing.level ?? candidate.level,
+
+        sources,
+        updatedAt: now,
+      });
     } else {
       byWord.set(normalizedWord, {
-        id: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${normalizedWord}-${Date.now()}`,
+        id:
+          typeof crypto !== "undefined" &&
+          "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `${normalizedWord}-${Date.now()}`,
+
         word: candidate.word,
         normalizedWord,
+
+        // 直接保存 Reader 页面已经计算好的 CEFR 等级。
+        level: candidate.level,
+
         status: "new",
         meaning: "",
         notes: "",
-        sources: [{ documentName, frequency: candidate.count, firstPage: candidate.firstPage, addedAt: now }],
+
+        sources: [
+          {
+            documentName,
+            frequency: candidate.count,
+            firstPage: candidate.firstPage,
+            addedAt: now,
+          },
+        ],
+
         createdAt: now,
         updatedAt: now,
         nextReviewAt: now,
+
         reviewCount: 0,
         correctCount: 0,
         incorrectCount: 0,
@@ -66,7 +126,9 @@ export function addVocabularyItems(candidates: WordCandidate[], documentName: st
   }
 
   const merged = [...byWord.values()];
+
   saveVocabulary(merged);
+
   return merged;
 }
 
