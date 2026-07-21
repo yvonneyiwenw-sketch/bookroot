@@ -21,6 +21,7 @@ import { dictionaryByTerm } from "@/lib/buildingDictionary";
 import {
   findAiDictionaryEntry,
   normaliseDictionaryTerm,
+  saveAiDictionaryEntry,
 } from "@/lib/aiDictionaryStorage";
 
 import { getCefrEvaluation } from "@/lib/cefrStorage";
@@ -193,7 +194,9 @@ export default function ReviewPage() {
   const [reviewed, setReviewed] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [mastered, setMastered] = useState(0);
-
+  const [generatingWord, setGeneratingWord] = useState<string | null>(null);
+  const [generationMessage, setGenerationMessage] = useState("");
+  
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const vocabulary = getVocabulary();
@@ -263,6 +266,92 @@ export default function ReviewPage() {
     }),
     [allItems],
   );
+
+  async function generateExplanation(
+  item: VocabularyItem,
+) {
+  try {
+    setGeneratingWord(item.normalizedWord);
+    setGenerationMessage("");
+
+    const source = item.sources.at(-1);
+
+    const response = await fetch(
+      "/api/dictionary/generate",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          term: item.word,
+          domain:
+            "Australian building, construction, landscape architecture and site management",
+          context: source
+            ? `The word was extracted from the PDF "${source.documentName}" and appeared ${source.frequency} time(s).`
+            : "The word was saved in BookRoot vocabulary.",
+        }),
+      },
+    );
+
+    const result = (await response.json()) as {
+      entry?: DictionaryEntry;
+      model?: string;
+      error?: string;
+    };
+
+    if (!response.ok || !result.entry) {
+      throw new Error(
+        result.error || "AI generation failed.",
+      );
+    }
+
+    saveAiDictionaryEntry(
+      result.entry,
+      DICTIONARY_DOMAIN,
+      result.model,
+    );
+
+    const text = dictionaryText(result.entry);
+
+    const meaning =
+      `${text.meaningZh} — ${text.definitionEn}`;
+
+    const nextItems = updateVocabularyItem(
+      item.id,
+      {
+        meaning,
+      },
+    );
+
+    setAllItems(nextItems);
+
+    setQueue((currentQueue) =>
+      currentQueue.map((queueItem) =>
+        queueItem.id === item.id
+          ? {
+              ...queueItem,
+              meaning,
+              updatedAt:
+                new Date().toISOString(),
+            }
+          : queueItem,
+      ),
+    );
+
+    setGenerationMessage(
+      `${item.word} now has a bilingual AI explanation.`,
+    );
+  } catch (error) {
+    setGenerationMessage(
+      error instanceof Error
+        ? error.message
+        : "Could not generate the explanation.",
+    );
+  } finally {
+    setGeneratingWord(null);
+  }
+}
 
   function review(rating: ReviewRating) {
     if (!current) return;
@@ -519,11 +608,35 @@ export default function ReviewPage() {
                           </>
                         )}
                       </>
-                    ) : (
-                      <p className="mt-4 text-gray-500">
-                        No explanation is available yet.
-                      </p>
-                    )}
+) : (
+  <div className="mt-4 rounded-xl border border-dashed border-stone-300 bg-stone-50 p-4">
+    <p className="text-gray-500">
+      No bilingual dictionary explanation is
+      available yet.
+    </p>
+
+    <button
+      type="button"
+      disabled={
+        generatingWord === current.normalizedWord
+      }
+      onClick={() =>
+        void generateExplanation(current)
+      }
+      className="mt-3 rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+    >
+      {generatingWord === current.normalizedWord
+        ? "Generating English + 中文…"
+        : "Generate bilingual explanation with AI"}
+    </button>
+
+    {generationMessage && (
+      <p className="mt-3 text-sm text-green-700">
+        {generationMessage}
+      </p>
+    )}
+  </div>
+)}
 
                     {entryText?.professionalExplanationZh && (
                       <>

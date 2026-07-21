@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import PageShell from "@/components/PageShell";
 import { dictionaryBySlug } from "@/lib/buildingDictionary";
 import { dictionaryText } from "@/types/dictionary";
+import AddToVocabularyButton from "@/components/AddToVocabularyButton";
 
 export default async function DictionaryEntryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -21,6 +22,11 @@ export default async function DictionaryEntryPage({ params }: { params: Promise<
           <Card title="Professional example"><p>{text.exampleEn}</p><p className="mt-3 text-gray-500">{text.exampleZh}</p></Card>
         </div>
         <div className="space-y-5">
+            <AddToVocabularyButton
+              word={entry.term}
+              meaning={`${text.meaningZh} — ${text.definitionEn}`}
+            />
+            
           <Card title="Memory trick"><p>{text.memoryTrickEn}</p></Card>
           <Card title="Australian usage"><p>{text.australianUsageEn}</p></Card>
           <Card title="Related words"><div className="flex flex-wrap gap-2">{entry.relatedWords.length ? entry.relatedWords.map((word) => <span key={word} className="rounded-full bg-green-50 px-3 py-1 text-sm text-green-800">{word}</span>) : <span className="text-gray-500">No related words listed.</span>}</div></Card>
